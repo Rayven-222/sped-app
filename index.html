@@ -107,7 +107,7 @@
             navigator.serviceWorker.register('sw.js').then(() => console.log('Service Worker 註冊成功'));
         }
 
-        const teacherList = [{ id: "李慧慧", label: "慧慧" }, { id: "林秀真", label: "秀真" }, { id: "謝旻珊", label: "旻珊" }, { id: "劉仲珈", label: "仲珈" }, { id: "邱亞玲", label: "亞玲" }, { id: "林昱維", label: "昱維" }, { id: "姜驊娟", label: "驊娟" }, { id: "資優", label: "資優" }];
+        const teacherList = [{ id: "李慧慧", label: "慧慧" }, { id: "林秀真", label: "秀真" }, { id: "謝旻珊", label: "旻珊" }, { id: "劉仲珈", label: "仲珈" }, { id: "邱亞玲", label: "亞玲" }, { id: "林昱維", label: "昱維" }, { id: "余亭岑", label: "亭岑" }, { id: "資優", label: "資優" }];
         const giftedTeachers = ["謝承諺", "李虹瑩"];
         let scheduleDB = {}, studentDB = {}, therapyDB = [], meetingDB = [], aideDB = [];
         let autoRefreshTimer = null, currentEditingTeacher = "", selectedStatusValue = "";
@@ -157,28 +157,35 @@
         initTable();
 
         function syncData() {
-            document.getElementById('resultBox').innerHTML = "📡 同步中...";
-            fetch(`${GAS_API_URL}?action=getCloudData`)
-            .then(res => res.json())
-            .then(res => {
-                if(res.error) return alert(res.error);
-                scheduleDB = {};
-                res.schedule.forEach(row => {
-                    const key = row['時段']; if(!key) return;
-                    scheduleDB[key] = [];
-                    Object.keys(row).forEach(t => {
-                        if(t === '時段' || !row[t]) return;
-                        const info = String(row[t]).split(/\n/);
-                        scheduleDB[key].push({ teacher: t, group: info[0], students: (info[1]||"").split(/[,，、]/).map(s=>s.trim()).filter(s=>s) });
-                    });
-                });
-                studentDB = {};
-                res.students.forEach(row => { if(row['姓名']) studentDB[row['姓名'].trim()] = row; });
-                therapyDB = res.therapy || []; meetingDB = res.meetings || []; aideDB = res.aides || [];
-                render(); checkT(); checkMeeting();
-                document.getElementById('resultBox').innerHTML = "✅ 同步完成！";
+    document.getElementById('resultBox').innerHTML = "📡 同步中...";
+    fetch(`${GAS_API_URL}?action=getCloudData`)
+    .then(res => {
+        if (!res.ok) throw new Error("網路回應不正常：" + res.status);
+        return res.json();
+    })
+    .then(res => {
+        if(res.error) return alert(res.error);
+        scheduleDB = {};
+        res.schedule.forEach(row => {
+            const key = row['時段']; if(!key) return;
+            scheduleDB[key] = [];
+            Object.keys(row).forEach(t => {
+                if(t === '時段' || !row[t]) return;
+                const info = String(row[t]).split(/\n/);
+                scheduleDB[key].push({ teacher: t, group: info[0], students: (info[1]||"").split(/[,，、]/).map(s=>s.trim()).filter(s=>s) });
             });
-        }
+        });
+        studentDB = {};
+        res.students.forEach(row => { if(row['姓名']) studentDB[row['姓名'].trim()] = row; });
+        therapyDB = res.therapy || []; meetingDB = res.meetings || []; aideDB = res.aides || [];
+        render(); checkT(); checkMeeting();
+        document.getElementById('resultBox').innerHTML = "✅ 同步完成！";
+    })
+    .catch(err => {
+        console.error(err);
+        document.getElementById('resultBox').innerHTML = `<p style="color:red; font-weight:bold; text-align:center;">❌ 連線失敗：${err.message}<br><small>請檢查 GAS 部署權限是否已設為『所有人』與 API 網址是否正確。</small></p>`;
+    });
+}
 
         function render() {
             document.querySelectorAll('.schedule-cell').forEach(cell => {
