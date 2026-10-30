@@ -158,9 +158,16 @@
 
         function syncData() {
     document.getElementById('resultBox').innerHTML = "📡 同步中...";
-    fetch(`${GAS_API_URL}?action=getCloudData`)
+    
+    // 移除網址前後可能的空格
+    const cleanUrl = GAS_API_URL.trim();
+
+    fetch(`${cleanUrl}?action=getCloudData`, {
+        method: "GET",
+        redirect: "follow"
+    })
     .then(res => {
-        if (!res.ok) throw new Error("網路回應不正常：" + res.status);
+        if (!res.ok) throw new Error("HTTP 狀態碼：" + res.status);
         return res.json();
     })
     .then(res => {
@@ -183,7 +190,7 @@
     })
     .catch(err => {
         console.error(err);
-        document.getElementById('resultBox').innerHTML = `<p style="color:red; font-weight:bold; text-align:center;">❌ 連線失敗：${err.message}<br><small>請檢查 GAS 部署權限是否已設為『所有人』與 API 網址是否正確。</small></p>`;
+        document.getElementById('resultBox').innerHTML = `<p style="color:red; font-weight:bold; text-align:center;">❌ 連線失敗：${err.message}<br><small>請確認 API 網址是否尾端為 /exec，且非學校帳號權限封鎖。</small></p>`;
     });
 }
 
