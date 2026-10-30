@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>特教課表系統</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2c3e50">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2693/2693507.png">
+    <style>
+        body { font-family: '微軟正黑體', sans-serif; padding: 10px; margin: 0; background-color: #f8f9fa; }
+        .header-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .header-title { margin: 0; font-size: 20px; color: #2c3e50; }
+        .top-menu-container { position: relative; display: inline-block; }
+        .menu-btn { background: #34495e; color: white; border: none; padding: 8px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; }
+        .dropdown-content { display: none; position: absolute; right: 0; top: 35px; background-color: #ffffff; min-width: 180px; box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.15); z-index: 9999; border-radius: 8px; border: 1px solid #dee2e6; overflow: hidden; }
+        .dropdown-content a { color: #2c3e50; padding: 12px 16px; text-decoration: none; display: block; font-size: 13px; font-weight: bold; border-bottom: 1px solid #f1f1f1; }
+        .dropdown-content a:hover { background-color: #f8f9fa; color: #27ae60; }
+        .dropdown-content.show { display: block; }
+        .sync-btn { width: 100%; background: #27ae60; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; margin-bottom: 10px; }
+        #therapyAlert { display: none; background: #fff5f5; border: 2px solid #ff7675; border-radius: 10px; padding: 12px; margin-bottom: 15px; }
+        #meetingAlert { display: none; background: #f0fafd; border: 2px solid #3498db; border-radius: 10px; padding: 12px; margin-bottom: 15px; }
+        .table-wrapper { width: 100%; overflow-x: auto; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border: 1px solid #dee2e6; }
+        table { border-collapse: collapse; min-width: 600px; width: 100%; font-size: 14px; }
+        th { background: #2c3e50; color: white; padding: 12px 4px; border: 1px solid #1a252f; font-weight: bold; }
+        td { border: 1px solid #dee2e6; padding: 4px; text-align: center; vertical-align: middle; background-color: #ffffff; }
+        .row-label { background-color: #f1f3f5; font-weight: bold; color: #495057; width: 45px; }
+        .t-btn { font-size: 11px; padding: 5px 8px; border-radius: 5px; border: none; color: white; font-weight: bold; margin: 2px; cursor: pointer; display: inline-block; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .t-color-0 { background-color: #e74c3c; } .t-color-1 { background-color: #3498db; }
+        .t-color-2 { background-color: #2ecc71; } .t-color-3 { background-color: #ef8391; } 
+        .t-color-4 { background-color: #e7c3a9; } .t-color-5 { background-color: #1abc9c; }
+        .t-color-6 { background-color: #9b59b6; } .t-color-7 { background-color: #f39c12; }
+        .t-color-other { background-color: #95a5a6; } 
+        #resultBox { padding: 15px; background: #fff; border-radius: 10px; margin-top: 10px; border-top: 4px solid #27ae60; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        .student-tag { display: inline-block; background: #ebf5ff; border: 1px solid #3498db; color: #3498db; padding: 6px 10px; margin: 4px; border-radius: 20px; font-weight: bold; cursor: pointer; font-size: 12px; }
+        .meeting-stu-tag { display: inline-block; background: #e8f8f5; border: 1px solid #1abc9c; color: #16a085; padding: 4px 8px; margin: 2px; border-radius: 15px; font-weight: bold; cursor: pointer; font-size: 11px; }
+        .class-btn-tag { display: inline-block; background: #f3e5f5; border: 1px solid #8e44ad; color: #8e44ad; padding: 8px 14px; margin: 4px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        .mini-grid { table-layout: fixed; font-size: 11px; width: 100%; border-collapse: collapse; }
+        .mini-grid th, .mini-grid td { border: 1px solid #dee2e6; padding: 8px 2px; text-align: center; word-break: break-all; }
+        .highlight-box { background-color: #fff9c4; font-weight: bold; color: #d35400; }
+        .back-btn { width: 100%; background: #6c757d; color: white; border: none; padding: 10px; border-radius: 5px; margin-bottom: 12px; font-weight: bold; cursor: pointer; }
+        .board-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(105px, 1fr)); gap: 8px; margin-top: 10px; }
+        .teacher-card { background: #fff; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.06); padding: 8px 5px; text-align: center; cursor: pointer; transition: transform 0.1s; user-select: none; border-top: 4px solid #2ecc71; }
+        .teacher-card:active { transform: scale(0.96); }
+        .teacher-name { font-size: 15px; font-weight: bold; color: #2c3e50; margin-bottom: 4px; }
+        .status-badge { display: inline-block; padding: 2px 6px; border-radius: 10px; font-size: 11px; font-weight: bold; color: white; background: #2ecc71; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+        .teacher-detail { font-size: 10px; color: #7f8c8d; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .st-office { border-top-color: #2ecc71; background: #f2f9f5; } .st-office .status-badge { background: #2ecc71; }
+        .st-teaching { border-top-color: #e74c3c; background: #fdf2f2; } .st-teaching .status-badge { background: #e74c3c; }
+        .st-workshop { border-top-color: #f39c12; background: #fef9e7; } .st-workshop .status-badge { background: #f39c12; }
+        .st-survey { border-top-color: #3498db; background: #ebf5fb; } .st-survey .status-badge { background: #3498db; }
+        .st-meeting { border-top-color: #8e44ad; background: #f4ecf7; } .st-meeting .status-badge { background: #8e44ad; }
+        .st-leave { border-top-color: #c0392b; background: #fdf2f2; } .st-leave .status-badge { background: #c0392b; }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; justify-content: center; align-items: center; }
+        .modal-content { background: white; width: 90%; max-width: 380px; padding: 20px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
+        .status-btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+        .status-opt-btn { padding: 12px 8px; border: 2px solid #e2e8f0; border-radius: 8px; background: #f7fafc; font-weight: bold; cursor: pointer; text-align: center; font-size: 13px; }
+    </style>
+</head>
+<body>
+    <div class="header-bar">
+        <h1 class="header-title">🏫 特教課表系統</h1>
+        <div class="top-menu-container">
+            <button class="menu-btn" onclick="toggleMenu(event)">☰ 功能選單 ▾</button>
+            <div id="dropdownMenu" class="dropdown-content">
+                <a href="#" onclick="menuAction('board')">📺 教師動態看板</a>
+                <a href="#" onclick="menuAction('class')">🏫 普通班抽離總課表</a>
+                <a href="#" onclick="menuAction('aide')">🤝 助理員班表</a>
+            </div>
+        </div>
+    </div>
+
+    <button class="sync-btn" onclick="syncData()">🔄 同步雲端資料</button>
+    
+    <div id="meetingAlert"><div style="color:#2980b9; font-weight:bold; font-size:16px;">📅 今天日程行程</div><div id="meetingList"></div></div>
+    <div id="therapyAlert"><div style="color:#d63031; font-weight:bold; font-size:16px;">🚨 今日治療團隊行程</div><div id="therapyList"></div></div>
+
+    <div class="table-wrapper"><table id="mainTable"></table></div>
+    <div id="resultBox"><p style="text-align:center; color:#adb5bd;">資料同步後，點擊課表查看詳細資訊。</p></div>
+
+    <div id="statusModal" class="modal-overlay">
+        <div class="modal-content">
+            <h3 id="modalTeacherTitle" style="margin-top:0; color:#2c3e50; font-size:18px;">✏️ 更改教師狀態</h3>
+            <p style="font-size:13px; color:#4a5568; margin-bottom:6px; font-weight:bold;">1. 點擊快捷按鈕選擇狀態：</p>
+            <div class="status-btn-grid">
+                <button class="status-opt-btn" style="border-color:#2ecc71; color:#27ae60;" onclick="selectStatusOpt(this, '自動/在辦公室')">🟢 在辦公室</button>
+                <button class="status-opt-btn" style="border-color:#f39c12; color:#d35400;" onclick="selectStatusOpt(this, '外出研習')">🟡 外出研習</button>
+                <button class="status-opt-btn" style="border-color:#3498db; color:#2980b9;" onclick="selectStatusOpt(this, '校外會勘')">🔵 校外會勘</button>
+                <button class="status-opt-btn" style="border-color:#8e44ad; color:#8e44ad;" onclick="selectStatusOpt(this, '會議中')">🟣 會議中</button>
+                <button class="status-opt-btn" style="border-color:#c0392b; color:#c0392b; grid-column: span 2;" onclick="selectStatusOpt(this, '請假/差假')">🔴 請假/差假</button>
+            </div>
+            <p style="font-size:13px; color:#4a5568; margin:12px 0 6px 0; font-weight:bold;">2. 輸入備註說明 (選填)：</p>
+            <input type="text" id="modalStatusNote" placeholder="例如：至 11:00、3樓會議室" style="width:100%; padding:10px; box-sizing:border-box; border:1px solid #cbd5e0; border-radius:6px; font-size:13px; margin-bottom:15px;">
+            <div style="display:flex; gap:10px;">
+                <button class="sync-btn" style="background:#27ae60; margin:0;" onclick="submitTeacherStatus()">✅ 儲存變更</button>
+                <button class="sync-btn" style="background:#718096; margin:0;" onclick="closeStatusModal()">✖ 取消</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 🔗 填入 Step 1 取得的部署 URL
+        const GAS_API_URL = "https://script.google.com/macros/s/AKfycbxy7s1jlEbp4qlCmQ4ZtXqDZngTnobLVuOEt-pTk_hhNG4Sj3JZZeFLSZxvWTKjrG4/exec";
+
+        // 註冊 PWA Service Worker
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js').then(() => console.log('Service Worker 註冊成功'));
+        }
+
+        const teacherList = [{ id: "李慧慧", label: "慧慧" }, { id: "林秀真", label: "秀真" }, { id: "謝旻珊", label: "旻珊" }, { id: "劉仲珈", label: "仲珈" }, { id: "邱亞玲", label: "亞玲" }, { id: "林昱維", label: "昱維" }, { id: "姜驊娟", label: "驊娟" }, { id: "資優", label: "資優" }];
+        const giftedTeachers = ["謝承諺", "李虹瑩"];
+        let scheduleDB = {}, studentDB = {}, therapyDB = [], meetingDB = [], aideDB = [];
+        let autoRefreshTimer = null, currentEditingTeacher = "", selectedStatusValue = "";
+
+        function toggleMenu(e) { e.stopPropagation(); document.getElementById("dropdownMenu").classList.toggle("show"); }
+        window.onclick = function() { document.querySelectorAll('.dropdown-content').forEach(d => d.classList.remove('show')); };
+
+        function hideMainViews() {
+            document.querySelector('.table-wrapper').style.display = 'none';
+            document.querySelector('.sync-btn').style.display = 'none';
+            document.getElementById('meetingAlert').style.display = 'none';
+            document.getElementById('therapyAlert').style.display = 'none';
+        }
+
+        function restoreMainViews() {
+            if (autoRefreshTimer) clearInterval(autoRefreshTimer);
+            document.querySelector('.table-wrapper').style.display = 'block';
+            document.querySelector('.sync-btn').style.display = 'block';
+            checkMeeting(); checkT();
+            document.getElementById('resultBox').innerHTML = '<p style="text-align:center; color:#adb5bd;">資料同步後，點擊課表查看詳細資訊。</p>';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function menuAction(type) {
+            document.getElementById("dropdownMenu").classList.remove("show");
+            if (autoRefreshTimer) clearInterval(autoRefreshTimer);
+            hideMainViews();
+            if (type === 'class') showClassPicker();
+            else if (type === 'aide') showAideMenu();
+            else if (type === 'board') showLiveBoard();
+        }
+
+        function initTable() {
+            const periods = ["早自修", "第一節", "第二節", "第三節", "第四節", "LUNCH", "第五節", "第六節", "第七節"];
+            const daysCorrect = ["星期一", "星期二", "星期三", "星期四", "星期五"];
+            let html = "<tr><th style='width:50px;'>節次</th><th>一</th><th>二</th><th>三</th><th>四</th><th>五</th></tr>";
+            periods.forEach(p => {
+                if(p === "LUNCH") html += `<tr><td colspan="6" style="background:#fff9db; height:25px; font-size:11px; color:#856404;">午休時間</td></tr>`;
+                else {
+                    html += `<tr><td class="row-label">${p.substring(0,2)}</td>`;
+                    daysCorrect.forEach(d => html += `<td class="schedule-cell" data-day="${d}" data-period="${p}">-</td>`);
+                    html += "</tr>";
+                }
+            });
+            document.getElementById('mainTable').innerHTML = html;
+        }
+        initTable();
+
+        function syncData() {
+            document.getElementById('resultBox').innerHTML = "📡 同步中...";
+            fetch(`${GAS_API_URL}?action=getCloudData`)
+            .then(res => res.json())
+            .then(res => {
+                if(res.error) return alert(res.error);
+                scheduleDB = {};
+                res.schedule.forEach(row => {
+                    const key = row['時段']; if(!key) return;
+                    scheduleDB[key] = [];
+                    Object.keys(row).forEach(t => {
+                        if(t === '時段' || !row[t]) return;
+                        const info = String(row[t]).split(/\n/);
+                        scheduleDB[key].push({ teacher: t, group: info[0], students: (info[1]||"").split(/[,，、]/).map(s=>s.trim()).filter(s=>s) });
+                    });
+                });
+                studentDB = {};
+                res.students.forEach(row => { if(row['姓名']) studentDB[row['姓名'].trim()] = row; });
+                therapyDB = res.therapy || []; meetingDB = res.meetings || []; aideDB = res.aides || [];
+                render(); checkT(); checkMeeting();
+                document.getElementById('resultBox').innerHTML = "✅ 同步完成！";
+            });
+        }
+
+        function render() {
+            document.querySelectorAll('.schedule-cell').forEach(cell => {
+                const key = cell.dataset.day + "_" + cell.dataset.period;
+                const groups = scheduleDB[key] || [];
+                if(groups.length > 0) {
+                    let html = "", processedGroupIndices = new Set(), hasGiftedShown = false;
+                    teacherList.forEach((tea, idx) => {
+                        if (tea.id === "資優") {
+                            const foundGifted = groups.some(g => giftedTeachers.includes(g.teacher));
+                            if (foundGifted && !hasGiftedShown) {
+                                html += `<button class="t-btn t-color-${idx}" onclick="showSlot('${cell.dataset.day}','${cell.dataset.period}','資優','資優',${idx})">資優</button>`;
+                                hasGiftedShown = true;
+                                groups.forEach((g, i) => { if(giftedTeachers.includes(g.teacher)) processedGroupIndices.add(i); });
+                            }
+                        } else {
+                            groups.forEach((g, i) => {
+                                if (g.teacher === tea.id) {
+                                    html += `<button class="t-btn t-color-${idx}" onclick="showSlot('${cell.dataset.day}','${cell.dataset.period}','${tea.id}','${tea.label}',${idx})">${tea.label}</button>`;
+                                    processedGroupIndices.add(i);
+                                }
+                            });
+                        }
+                    });
+                    groups.forEach((g, i) => {
+                        if (!processedGroupIndices.has(i)) html += `<button class="t-btn t-color-other" onclick="showSlot('${cell.dataset.day}','${cell.dataset.period}','${g.teacher}','${g.teacher}', 99)">${g.teacher}</button>`;
+                    });
+                    cell.innerHTML = html || "-";
+                } else cell.innerHTML = "-";
+            });
+        }
+
+        function checkMeeting() {
+            const todayStr = new Date().toLocaleDateString('zh-TW', {year:'numeric', month:'2-digit', day:'2-digit'}).replace(/\-/g, '/');
+            const list = meetingDB.filter(ev => ev['日期'] === todayStr);
+            const box = document.getElementById('meetingAlert');
+            if (list.length > 0) {
+                box.style.display = 'block';
+                document.getElementById('meetingList').innerHTML = list.map(ev => {
+                    const stus = String(ev['學生名單'] || "").split(/[,，、\n]/).map(s=>s.trim()).filter(s=>s);
+                    const tagsHtml = stus.length > 0 ? `<br>👥 相關學生：` + stus.map(s => `<span class="meeting-stu-tag" onclick="showStuFromAlert('${s}')">${s}</span>`).join('') : '';
+                    return `<div style="background:white; padding:10px; margin-top:8px; border-left:5px solid #3498db; font-size:13px;">⏱️ 時間：${ev['時間/時段']}<br>📝 內容：<b>${ev['活動/會議內容'] || ev['會議名稱/事由'] || '無註明事由'}</b><br>📍 地點：${ev['地點'] || '未註明'}${tagsHtml}</div>`;
+                }).join('');
+            } else box.style.display = 'none';
+        }
+
+        function checkT() {
+            const todayStr = new Date().toLocaleDateString('zh-TW', {year:'numeric', month:'2-digit', day:'2-digit'}).replace(/\-/g, '/');
+            const list = therapyDB.filter(ev => ev['日期'] === todayStr);
+            const box = document.getElementById('therapyAlert');
+            if (list.length > 0) {
+                box.style.display = 'block';
+                document.getElementById('therapyList').innerHTML = list.map(ev => `<div style="background:white; padding:10px; margin-top:8px; border-left:5px solid #d63031; font-size:13px;"><b>${ev['時間/時段']}</b> | ${ev['治療師/類別']}<br>📍 地點：<b>${ev['地點'] || '未註明'}</b><br>👥 學生：${ev['學生名單']}</div>`).join('');
+            } else box.style.display = 'none';
+        }
+
+        function showStuFromAlert(name) { showStu(name, '當日', '會議點擊', '', '個案提示', 99); }
+
+        function getStatusColorClass(status) {
+            if (!status) return 'st-office';
+            if (status.includes('上課中')) return 'st-teaching';
+            if (status.includes('外出研習')) return 'st-workshop';
+            if (status.includes('校外會勘')) return 'st-survey';
+            if (status.includes('會議中')) return 'st-meeting';
+            if (status.includes('請假') || status.includes('差假')) return 'st-leave';
+            return 'st-office';
+        }
+
+        function showLiveBoard() {
+            document.getElementById('resultBox').innerHTML = "📡 讀取即時看板數據中...";
+            fetchLiveBoardData();
+            if (autoRefreshTimer) clearInterval(autoRefreshTimer);
+            autoRefreshTimer = setInterval(fetchLiveBoardData, 30000);
+        }
+
+        function fetchLiveBoardData() {
+            fetch(`${GAS_API_URL}?action=getLiveTeacherStatus`)
+            .then(res => res.json())
+            .then(data => {
+                let html = `<button class="back-btn" onclick="restoreMainViews()">✖ 關閉看板</button>
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <h3 style="margin:0; font-size:16px;">📺 教師動態即時看板</h3>
+                        <span style="font-size:11px; color:#7f8c8d;">🕒 ${data.currentTime} (${data.currentDay})</span>
+                    </div>
+                    <p style="font-size:11px; color:#95a5a6; margin:4px 0 8px 0;">💡 點選任一教師卡片即可快速變更動態/備註。</p><div class="board-grid">`;
+                data.teachers.forEach(t => {
+                    const colorClass = getStatusColorClass(t.status);
+                    html += `<div class="teacher-card ${colorClass}" onclick="openStatusModal('${t.teacher}')">
+                        <div class="teacher-name">${t.teacher}</div>
+                        <span class="status-badge">${t.status}</span>
+                        ${t.detail ? `<div class="teacher-detail" title="${t.detail}">${t.detail}</div>` : ''}
+                    </div>`;
+                });
+                html += `</div>`;
+                document.getElementById('resultBox').innerHTML = html;
+            });
+        }
+
+        function openStatusModal(teacherName) {
+            currentEditingTeacher = teacherName; selectedStatusValue = "";
+            document.getElementById('modalTeacherTitle').innerText = `✏️ 更改【${teacherName}】狀態`;
+            document.getElementById('modalStatusNote').value = "";
+            document.querySelectorAll('.status-opt-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById('statusModal').style.display = 'flex';
+        }
+        function closeStatusModal() { document.getElementById('statusModal').style.display = 'none'; }
+        function selectStatusOpt(btn, value) {
+            document.querySelectorAll('.status-opt-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active'); selectedStatusValue = value;
+        }
+
+        function submitTeacherStatus() {
+            if (!selectedStatusValue) return alert("請先點擊選擇一個狀態按鈕！");
+            const note = document.getElementById('modalStatusNote').value.trim();
+            const finalStatus = note ? `${selectedStatusValue} (${note})` : selectedStatusValue;
+            closeStatusModal();
+            document.getElementById('resultBox').innerHTML = `⏳ 更新 ${currentEditingTeacher} 狀態為【${finalStatus}】中...`;
+
+            fetch(`${GAS_API_URL}?action=updateTeacherCustomStatus&teacher=${encodeURIComponent(currentEditingTeacher)}&status=${encodeURIComponent(finalStatus)}`)
+            .then(res => res.json())
+            .then(data => {
+                alert(data.message || "更新成功！");
+                fetchLiveBoardData();
+            });
+        }
+
+        function showClassPicker() {
+            const classList = [...new Set(Object.values(studentDB).map(s => String(s['班級']||'').trim()).filter(c=>c))].sort();
+            if (classList.length === 0) { restoreMainViews(); return alert("尚無學生班級資料，請先按『同步雲端資料』！"); }
+            let html = `<button class="back-btn" onclick="restoreMainViews()">✖ 關閉</button><h4>🏫 請選擇班級查看抽離總課表</h4><div>`;
+            classList.forEach(c => { html += `<span class="class-btn-tag" onclick="showClassSchedule('${c}')">${c} 班</span>`; });
+            html += `</div>`;
+            document.getElementById('resultBox').innerHTML = html;
+        }
+
+        function showClassSchedule(className) {
+            const classStudents = Object.values(studentDB).filter(s => String(s['班級']||'').trim() === String(className).trim());
+            if (classStudents.length === 0) return alert(`查無 ${className} 班的學生資料！`);
+            const studentNames = classStudents.map(s => s['姓名'].trim());
+            const days = ["星期一", "星期二", "星期三", "星期四", "星期五"];
+            const periods = ["早自修", "第一節", "第二節", "第三節", "第四節", "第五節", "第六節", "第七節"];
+            let grid = `<div class="table-wrapper"><table class="mini-grid"><tr><th style="width:40px;"></th>${days.map(d=>`<th>${d[2]}</th>`).join('')}</tr>`;
+            periods.forEach(per => {
+                grid += `<tr><td style="background:#f8f9fa; font-weight:bold;">${per.substring(0,2)}</td>`;
+                days.forEach(day => {
+                    const slotGroups = scheduleDB[day + "_" + per] || [];
+                    let matches = [];
+                    slotGroups.forEach(g => {
+                        const matchedStus = g.students.filter(sName => studentNames.includes(sName));
+                        if (matchedStus.length > 0) matches.push(`<b>${matchedStus.join(', ')}</b><br><span style="color:#d35400;">${g.group}</span>`);
+                    });
+                    grid += matches.length > 0 ? `<td class="highlight-box">${matches.join('<hr style="border:0;border-top:1px dashed #f39c12;margin:3px 0;">')}</td>` : `<td>-</td>`;
+                });
+                grid += "</tr>";
+            });
+            grid += `</table></div>`;
+            let stuTagsHtml = classStudents.map(s => `<span class="student-tag" onclick="showStu('${s['姓名']}','當日','班級點擊','','',99)">${s['姓名']} (${s['障礙類別']||'個案'})</span>`).join('');
+            document.getElementById('resultBox').innerHTML = `<button class="back-btn" onclick="showClassPicker()">⬅ 返回班級清單</button><h4>🏫 ${className} 班級抽離總課表</h4><p style="font-size:13px; margin-bottom:8px;"><b>該班抽離學生：</b><br>${stuTagsHtml}</p>${grid}`;
+        }
+
+        function showAideMenu() {
+            if (aideDB.length === 0) { restoreMainViews(); return alert("尚無助理員班表資料，請先按『同步雲端資料』！"); }
+            let html = `<button class="back-btn" onclick="restoreMainViews()">✖ 關閉</button><h4>🤝 助理員班表查詢</h4>
+                <div style="display:flex; gap:10px; margin-bottom:12px;">
+                    <button class="sync-btn" style="background:#2980b9; margin:0;" onclick="showAideListByAide()">👤 依助理員查詢</button>
+                    <button class="sync-btn" style="background:#e67e22; margin:0;" onclick="showAideListByStudent()">🎓 依學生查詢</button>
+                </div><div id="aideSubContent"></div>`;
+            document.getElementById('resultBox').innerHTML = html;
+            showAideListByAide();
+        }
+
+        function showAideListByAide() {
+            const aides = [...new Set(aideDB.map(r => String(r['助理員']||r['助理員姓名']||'').trim()).filter(a=>a))].sort();
+            if (aides.length === 0) return document.getElementById('aideSubContent').innerHTML = "<p style='color:#e74c3c; font-size:13px;'>未找到助理員資料。</p>";
+            let html = `<p style="font-size:13px; font-weight:bold; margin:5px 0;">請選擇助理員：</p><div>`;
+            aides.forEach(a => { html += `<span class="class-btn-tag" style="background:#e8f8f5; border-color:#1abc9c; color:#16a085;" onclick="showAideSchedule('${a}')">👤 ${a}</span>`; });
+            html += `</div>`;
+            document.getElementById('aideSubContent').innerHTML = html;
+        }
+
+        function showAideSchedule(aideName) {
+            const days = ["星期一", "星期二", "星期三", "星期四", "星期五"];
+            const periods = ["早自修", "第一節", "第二節", "第三節", "第四節", "第五節", "第六節", "第七節"];
+            let grid = `<div class="table-wrapper"><table class="mini-grid"><tr><th style="width:40px;"></th>${days.map(d=>`<th>${d[2]}</th>`).join('')}</tr>`;
+            periods.forEach(per => {
+                grid += `<tr><td style="background:#f8f9fa; font-weight:bold;">${per.substring(0,2)}</td>`;
+                days.forEach(day => {
+                    const matches = aideDB.filter(r => (r['星期']||r['時段']||'').includes(day) && (r['節次']||r['時段']||'').includes(per) && String(r['助理員']||r['助理員姓名']||'').trim() === aideName);
+                    grid += matches.length > 0 ? `<td class="highlight-box" style="background-color:#e8f8f5; color:#16a085;">${matches.map(m => m['協助學生']||m['學生名單']||m['學生']||'協助中').join(', ')}</td>` : `<td>-</td>`;
+                });
+                grid += "</tr>";
+            });
+            grid += `</table></div>`;
+            document.getElementById('resultBox').innerHTML = `<button class="back-btn" onclick="showAideMenu()">⬅ 返回助理員查詢</button><h4>👤 助理員【${aideName}】服務課表</h4>${grid}`;
+        }
+
+        function showAideListByStudent() {
+            let stus = [];
+            aideDB.forEach(r => { String(r['協助學生']||r['學生名單']||r['學生']||'').split(/[,，、\n]/).forEach(s => { if (s.trim()) stus.push(s.trim()); }); });
+            stus = [...new Set(stus)].sort();
+            if (stus.length === 0) return document.getElementById('aideSubContent').innerHTML = "<p style='color:#e74c3c; font-size:13px;'>未找到受協助的學生資料。</p>";
+            let html = `<p style="font-size:13px; font-weight:bold; margin:5px 0;">請選擇學生查看陪同助理員：</p><div>`;
+            stus.forEach(s => { html += `<span class="class-btn-tag" style="background:#fef9e7; border-color:#f1c40f; color:#d35400;" onclick="showStudentAideSchedule('${s}')">🎓 ${s}</span>`; });
+            html += `</div>`;
+            document.getElementById('aideSubContent').innerHTML = html;
+        }
+
+        function showStudentAideSchedule(studentName) {
+            const days = ["星期一", "星期二", "星期三", "星期四", "星期五"];
+            const periods = ["早自修", "第一節", "第二節", "第三節", "第四節", "第五節", "第六節", "第七節"];
+            let grid = `<div class="table-wrapper"><table class="mini-grid"><tr><th style="width:40px;"></th>${days.map(d=>`<th>${d[2]}</th>`).join('')}</tr>`;
+            periods.forEach(per => {
+                grid += `<tr><td style="background:#f8f9fa; font-weight:bold;">${per.substring(0,2)}</td>`;
+                days.forEach(day => {
+                    const matches = aideDB.filter(r => (r['星期']||r['時段']||'').includes(day) && (r['節次']||r['時段']||'').includes(per) && String(r['協助學生']||r['學生名單']||r['學生']||'').split(/[,，、\n]/).map(s=>s.trim()).includes(studentName));
+                    grid += matches.length > 0 ? `<td class="highlight-box" style="background-color:#fef9e7; color:#d35400;">${[...new Set(matches.map(m => m['助理員']||m['助理員姓名']||'助理員'))].join(', ')}</td>` : `<td>-</td>`;
+                });
+                grid += "</tr>";
+            });
+            grid += `</table></div>`;
+            document.getElementById('resultBox').innerHTML = `<button class="back-btn" onclick="showAideMenu()">⬅ 返回助理員查詢</button><h4>🎓 學生【${studentName}】助理員陪同課表</h4>${grid}`;
+        }
+
+        function showSlot(d, p, tid, tl, ci) {
+            let targetTeachers = (tid === "資優") ? giftedTeachers : [tid];
+            const groups = (scheduleDB[d+"_"+p] || []).filter(g => targetTeachers.includes(g.teacher));
+            let h = `<button class="back-btn" onclick="document.getElementById('resultBox').innerHTML=''">✖ 關閉</button><div style="font-weight:bold; margin-bottom:10px;">📍 ${d} ${p} - ${tl}</div><button class="sync-btn" style="background:#34495e; padding:8px;" onclick="showTWeek('${tid}','${tl}',${ci},'${d}','${p}')">📅 查看 ${tl} 週課表</button><hr style="border:0; border-top:1px solid #eee;">`;
+            groups.forEach(g => {
+                h += `<div style="margin-bottom:10px;"><b>課程：${g.group}</b> (${g.teacher})<br>`;
+                g.students.forEach(s => h += `<span class="student-tag" onclick="showStu('${s}','${d}','${p}','${tid}','${tl}',${ci})">${s}</span>`);
+                h += `</div>`;
+            });
+            document.getElementById('resultBox').innerHTML = h;
+            document.getElementById('resultBox').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function showTWeek(tid, tl, ci, d, p) {
+            const days = ["星期一", "星期二", "星期三", "星期四", "星期五"];
+            const periods = ["早自修", "第一節", "第二節", "第三節", "第四節", "第五節", "第六節", "第七節"];
+            let targets = (tid === "資優") ? giftedTeachers : [tid];
+            let grid = `<div class="table-wrapper"><table class="mini-grid"><tr><th style="width:40px;"></th>${days.map(day=>`<th>${day[2]}</th>`).join('')}</tr>`;
+            periods.forEach(per => {
+                grid += `<tr><td style="background:#f8f9fa; font-weight:bold;">${per.substring(0,2)}</td>`;
+                days.forEach(day => {
+                    const matchedGroups = (scheduleDB[day+"_"+per] || []).filter(g => targets.includes(g.teacher));
+                    grid += matchedGroups.length > 0 ? `<td class="highlight-box">${matchedGroups.map(mg => mg.group).join('<br>')}</td>` : `<td>-</td>`;
+                });
+                grid += "</tr>";
+            });
+            grid += `</table></div>`;
+            document.getElementById('resultBox').innerHTML = `<button class="back-btn" onclick="showSlot('${d}','${p}','${tid}','${tl}',${ci})">⬅ 返回</button><h4>📅 ${tl} 週課表</h4>${grid}`;
+        }
+
+        function showStu(name, d, p, tid, tl, ci) {
+            const s = studentDB[name]; if(!s) return alert("無學生詳細資料");
+            const days = ["星期一", "星期二", "星期三", "星期四", "星期五"];
+            const periods = ["早自修", "第一節", "第二節", "第三節", "第四節", "第五節", "第六節", "第七節"];
+            let grid = `<div class="table-wrapper"><table class="mini-grid"><tr><th style="width:40px;"></th>${days.map(day=>`<th>${day[2]}</th>`).join('')}</tr>`;
+            periods.forEach(per => {
+                grid += `<tr><td style="background:#f8f9fa; font-weight:bold;">${per.substring(0,2)}</td>`;
+                days.forEach(day => {
+                    const match = (scheduleDB[day+"_"+per] || []).find(g => g.students.includes(name));
+                    grid += match ? `<td class="highlight-box">${match.group}</td>` : `<td>-</td>`;
+                });
+                grid += "</tr>";
+            });
+            grid += `</table></div>`;
+            const classClickable = s['班級'] ? `<span style="color:#8e44ad; cursor:pointer; text-decoration:underline;" onclick="showClassSchedule('${s['班級']}')">${s['班級']}</span>` : '未設定';
+            let backHtml = (p === '會議點擊' || p === '班級點擊') ? `<button class="back-btn" onclick="document.getElementById('resultBox').innerHTML=''">✖ 關閉</button>` : `<button class="back-btn" onclick="showSlot('${d}','${p}','${tid}','${tl}',${ci})">⬅ 返回</button>`;
+            document.getElementById('resultBox').innerHTML = `${backHtml}<h4>👤 ${name} 個人課表</h4><p style="font-size:13px;">班級：<b>${classClickable}</b> (點擊可看全班抽離課表) | 類別：${s['障礙類別']}</p>${grid}`;
+        }
+    </script>
+</body>
+</html>
