@@ -12,9 +12,13 @@
 <script>
   window.OneSignalDeferred = window.OneSignalDeferred || [];
   OneSignalDeferred.push(async function(OneSignal) {
+    if (window.__isOneSignalInited) return;
+    window.__isOneSignalInited = true;
+
     await OneSignal.init({
       appId: "7e77c8be-be7f-4e34-ab1a-f2e6f34cc4eb",
-      serviceWorkerPath: "OneSignalSDKWorker.js",
+      // ⚠️ 關鍵修正：需包含子目錄 sped-app/（開頭不加斜線）
+      serviceWorkerPath: "sped-app/OneSignalSDKWorker.js",
       serviceWorkerParam: { scope: "/sped-app/" }
     });
   });
