@@ -1,3 +1,4 @@
+importScripts('https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.sw.js');
 const CACHE_NAME = 'sped-app-v1';
 const urlsToCache = ['./index.html', './manifest.json'];
 

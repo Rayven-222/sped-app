@@ -203,6 +203,15 @@
         therapyDB = res.therapy || []; meetingDB = res.meetings || []; aideDB = res.aides || [];
         render(); checkT(); checkMeeting();
         document.getElementById('resultBox').innerHTML = "✅ 同步完成！";
+        // 🔄 同步完成後自動喚醒並確保推播訂閱
+        if (window.OneSignalDeferred) {
+          OneSignalDeferred.push(async function(OneSignal) {
+            if (!OneSignal.User.PushSubscription.optedIn) {
+              console.log("🔄 同步資料後自動重新喚醒推播訂閱...");
+              await OneSignal.User.PushSubscription.optIn();
+            }
+          });
+        }
     })
     .catch(err => {
         console.error(err);
